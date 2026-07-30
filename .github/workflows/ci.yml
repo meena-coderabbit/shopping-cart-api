@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  docker-health:
+    name: Build image & health check
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: shopping_cart_demo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d shopping_cart_demo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t shopping-cart-demo:ci .
+
+      - name: Start application container
+        run: |
+          # INTENTIONAL FAILURE (CodeRabbit github-checks test): wrong Postgres port
+          # so the app cannot connect and /health never becomes ready. Revert after review.
+          docker run -d \
+            --name shopping-cart-demo \
+            --network host \
+            -e NODE_ENV=production \
+            -e PORT=3000 \
+            -e DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/shopping_cart_demo?schema=public" \
+            shopping-cart-demo:ci
+
+      - name: Poll /health until ready
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health | grep -q '"status":"ok"'; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt ${i}/30: waiting for healthy response..."
+            sleep 2
+          done
+          echo "Health check did not pass in time"
+          exit 1
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: |
+          echo "::group::shopping-cart-demo logs"
+          docker logs shopping-cart-demo || true
+          echo "::endgroup::"
+
+      - name: Stop application container
+        if: always()
+        run: docker rm -f shopping-cart-demo || true

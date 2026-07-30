@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+reviews:
+  high_level_summary_instructions: |
+    Divide the summary into five sections:
+
+    1. **📝 Description**: Describe the main change in the pull request in 60 words max. Explain what was changed, why it was needed, and the approach taken.
+    2. **📓 References**: A list of links to discussions, issues and pull requests related to the changes. You can look up for documentation, issues, or other pull requests that provide context or background for the changes.
+    3. **📦 Dependencies & Requirements**: List any new dependencies added or updated. Mention environment variable changes, configuration updates, or version requirements.
+    4. **📊 Contributor Summary**: A table showing contributions (lines of code added, removed, files changed) made by the contributor in this pull request. Format: `| Contributor | Lines Added | Lines Removed | Files Changed |`
+
+    Use bullet points or numbered lists for clarity. Keep it short and each section should be no more than 200 words. The Changes Summary table should be concise with only essential file paths (relative to repo root).
+  path_instructions:
+    - path: src/
+      instructions: Use CommonJS (`require`/`module.exports`) throughout, keep filenames and symbols in camelCase, and prefer `_`-prefixed unused parameters when a callback signature requires them.
+    - path: src/routes/
+      instructions: "Keep route modules thin: name them after the plural resource, create a `Router()`, wire validation middleware before controller handlers, and export the router directly."
+    - path: src/controllers/
+      instructions: Implement controllers as async request handlers that parse request data, delegate to services, wrap logic in `try/catch`, and forward failures with `next(err)` instead of handling errors inline.
+    - path: src/services/
+      instructions: Keep business logic and Prisma access here; normalize IDs and inputs, translate Prisma errors into HTTP errors with `createHttpError`, and avoid Express response handling in services.
+    - path: src/middleware/
+      instructions: Keep middleware focused on cross-cutting concerns such as validation, 404 handling, and terminal error formatting; validation failures should call `next(err)` with HTTP 400 errors.
+    - path: src/db/
+      instructions: Export a single shared PrismaClient instance from this layer so database access stays centralized.
+    - path: src/models/
+      instructions: Treat this as a thin re-export layer for the Prisma client rather than a place for hand-written model classes or ORM abstractions.
+    - path: src/config/
+      instructions: Load environment variables here, validate required settings up front, and export a plain config object for the rest of the app to consume.
+    - path: prisma/schema.prisma
+      instructions: Define models with PascalCase names and camelCase fields, use `@id @default(autoincrement())` for primary keys, pair `createdAt` with `@default(now())` and `updatedAt` with `@updatedAt`, and use Prisma Decimal mapping for currency values.
+    - path: prisma/migrations/
+      instructions: Keep migration folders in Prisma’s timestamped `<timestamp>_<short_snake_case>` format, and do not hand-edit generated migration SQL or the lock file unless Prisma tooling produces the change.
+  pre_merge_checks:
+    custom_checks:
+      - name: "Data Protection (PII) compliance"
+        mode: error
+        instructions: >
+          Fail if the diff violates docs/DATA_PROTECTION.md: personal data
+          (name, email, phone, address, IP, card data, password, token) written
+          to console.*, request logging, or error messages (DP-02); passwords
+          stored/compared in plaintext or sensitive PII unencrypted (DP-03);
+          CVV/CVC, PIN, or full card numbers persisted (DP-04); or password
+          hashes, tokens, CVV, full government IDs, or unmasked card numbers
+          returned in a response (DP-08). Cite the rule ID. Pass if no
+          personal-data handling changed or all of it complies.
+      - name: "Personal-data access control"
+        mode: error
+        instructions: >
+          Fail if any endpoint reading or mutating personal data or a
+          user-owned resource (cart, order, customer/account) derives the
+          subject from a client-supplied ID without an ownership check, or from
+          a hardcoded placeholder such as userId = 1 (DP-09, OWASP API1 BOLA).
+          Pass only if every such endpoint scopes data to the authenticated
+          principal.
+      - name: "Data-subject rights coverage"
+        mode: warning
+        instructions: >
+          Fail if the PR adds a new model or endpoint that stores personal data
+          without a deletion path (DP-05) and a read/export path (DP-06), or if
+          a new consent/marketing flag defaults to enabled (DP-07). Pass if no
+          new PII resource is introduced or the required paths exist.
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "docs/DATA_PROTECTION.md"
