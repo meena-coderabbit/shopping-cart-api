@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 reviews:
+  request_changes_workflow: true
+  fail_commit_status: true
   high_level_summary_instructions: |
     Divide the summary into five sections:
 
@@ -31,7 +33,6 @@ reviews:
     - path: prisma/migrations/
       instructions: Keep migration folders in Prisma’s timestamped `<timestamp>_<short_snake_case>` format, and do not hand-edit generated migration SQL or the lock file unless Prisma tooling produces the change.
   pre_merge_checks:
-    request_changes_workflow: true
     custom_checks:
       - name: "Data Protection (PII) compliance"
         mode: error
