@@ -93,7 +93,10 @@ reviews:
           parameters, response field names or types, or status codes diverge
           from the spec; cite the spec name and the specific divergence. Pass if
           the implementation matches the spec, or no spec exists for the
-          endpoint.
+          endpoint. If the Postman MCP is unavailable — the call fails, times
+          out, or the workspace is unreachable — do not fail this check; treat
+          it as a non-blocking pass and note that the spec could not be
+          retrieved, so a third-party outage never blocks unrelated merges.
 knowledge_base:
   code_guidelines:
     enabled: true
