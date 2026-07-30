@@ -32,6 +32,16 @@ reviews:
       instructions: Define models with PascalCase names and camelCase fields, use `@id @default(autoincrement())` for primary keys, pair `createdAt` with `@default(now())` and `updatedAt` with `@updatedAt`, and use Prisma Decimal mapping for currency values.
     - path: prisma/migrations/
       instructions: Keep migration folders in Prisma’s timestamped `<timestamp>_<short_snake_case>` format, and do not hand-edit generated migration SQL or the lock file unless Prisma tooling produces the change.
+    - path: "**/*.test.js"
+      instructions: "Structure tests arrange-act-assert; mock the Prisma client rather than hitting a real database; name the describe block after the unit under test; assert on both success and error paths."
+    - path: "**/*.js"
+      instructions: Prefer `async/await` over raw promise chains, avoid floating promises (await or explicitly handle them), use strict equality (`===`), and keep modules focused on a single responsibility.
+    - path: Dockerfile
+      instructions: Pin a specific base image tag, run as a non-root user, copy only what is needed (respect `.dockerignore`), and avoid embedding secrets or build-time credentials in layers.
+    - path: ".github/workflows/**"
+      instructions: Pin third-party actions to a commit SHA or major version, grant the minimum `permissions`, never echo secrets, and keep required checks fast and deterministic.
+    - path: "**/*.md"
+      instructions: Use sentence-case headings, wrap prose at a readable width, use fenced code blocks with a language, and keep API tables in sync with the actual routes.
   pre_merge_checks:
     custom_checks:
       - name: "Data Protection (PII) compliance"
@@ -65,4 +75,7 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
-      - "docs/DATA_PROTECTION.md"
+      - "docs/**/*.md"
+      - "**/DATA_PROTECTION.md"
+      - "**/ENGINEERING_GUIDELINES.md"
+      - "**/API_DESIGN.md"
