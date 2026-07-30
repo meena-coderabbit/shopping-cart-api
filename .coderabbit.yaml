@@ -71,6 +71,32 @@ reviews:
           without a deletion path (DP-05) and a read/export path (DP-06), or if
           a new consent/marketing flag defaults to enabled (DP-07). Pass if no
           new PII resource is introduced or the required paths exist.
+      - name: "API design compliance"
+        mode: error
+        instructions: >
+          Enforce docs/API_DESIGN.md on any added or changed HTTP route or
+          controller. Fail and cite the API-xx rule ID when the diff: uses a
+          verb in the route path or a non-plural resource name (API-01);
+          returns an incorrect status code such as 201 on a read or 200 on a
+          create (API-02); returns an error shape other than { error } (API-03);
+          responds with a raw ORM/Prisma record instead of an explicit DTO
+          (API-04); adds a write endpoint without upstream validation middleware
+          (API-05); or adds a collection endpoint without pagination (API-06).
+          Pass if no HTTP route/controller changed or all of them comply.
+      - name: "API contract (Postman) compliance"
+        mode: error
+        instructions: >
+          For any added or changed HTTP endpoint, use the Postman MCP to fetch
+          the matching API specification from the "Shopping Cart Demo" workspace
+          (for coupon routes, the "Coupons API" spec) and compare the
+          implementation to it. Fail if the route path, HTTP method, path/query
+          parameters, response field names or types, or status codes diverge
+          from the spec; cite the spec name and the specific divergence. Pass if
+          the implementation matches the spec, or no spec exists for the
+          endpoint. If the Postman MCP is unavailable — the call fails, times
+          out, or the workspace is unreachable — do not fail this check; treat
+          it as a non-blocking pass and note that the spec could not be
+          retrieved, so a third-party outage never blocks unrelated merges.
 knowledge_base:
   code_guidelines:
     enabled: true
