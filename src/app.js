@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const healthRouter = require('./routes/health');
 const productsRouter = require('./routes/products');
 const cartRouter = require('./routes/cart');
+const customersRouter = require('./routes/customers');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -18,6 +19,7 @@ app.use(auth);
 app.use('/health', healthRouter);
 app.use('/products', productsRouter);
 app.use('/cart', cartRouter);
+app.use('/customers', customersRouter);
 
 app.use(notFound);
 app.use(errorHandler);
